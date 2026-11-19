@@ -432,12 +432,12 @@
 
           <div class="inline-block p-3 bg-white border border-slate-200 rounded-xl shadow-inner mb-4">
             <img id="img-qrcode-portaria"
-              src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://vale-verde-clube-2-reservas.vercel.app"
+              src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://condominio-vale-verde-clube-2-reser.vercel.app"
               alt="QR Code Reservas Vale Verde Clube 2" class="w-44 h-44 mx-auto" />
           </div>
 
           <p id="url-placa-portaria" class="text-xs font-mono text-slate-600 bg-slate-100 py-1.5 px-3 rounded-lg mb-4">
-            https://vale-verde-clube-2-reservas.vercel.app
+            https://condominio-vale-verde-clube-2-reser.vercel.app
           </p>
 
           <button onclick="window.print()" class="no-print bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg">
@@ -454,7 +454,7 @@
 
 Olá, vizinhos! Agora os agendamentos do *Salão de Festas* (até 120 pessoas) e das *Churrasqueiras* (até 20 pessoas) são feitos diretamente pelo link abaixo ou pelo QR Code na portaria:
 
-🔗 https://vale-verde-clube-2-reservas.vercel.app
+🔗 https://condominio-vale-verde-clube-2-reser.vercel.app
 
 ✅ Selecione seu Bloco e Apartamento
 ✅ Valide seu acesso com código rápido no WhatsApp ou E-mail
@@ -630,7 +630,6 @@ _Administração Vale Verde Clube 2_</textarea>
       document.getElementById('preview-whatsapp').textContent = u ? `📱 ${mascararWhatsapp(u.whatsapp)}` : '📱 —';
       document.getElementById('preview-email').textContent = u ? `✉️ ${mascararEmail(u.email)}` : '✉️ —';
 
-      // Reseta etapa do token se trocar de apartamento
       document.getElementById('box-codigo-validacao').classList.add('hidden');
       state.tokenGerado = null;
     }
@@ -659,7 +658,6 @@ _Administração Vale Verde Clube 2_</textarea>
         return;
       }
 
-      // Gera código aleatório de 6 dígitos
       const codigo = String(Math.floor(100000 + Math.random() * 900000));
       state.tokenGerado = codigo;
       state.unidadePendenteValidacaoId = u.id;
@@ -1109,14 +1107,17 @@ _Administração Vale Verde Clube 2_</textarea>
 
     // Atualiza QR Code automaticamente com a URL real onde o site está hospedado
     function sincronizarUrlReal() {
+      const urlOficial = 'https://condominio-vale-verde-clube-2-reser.vercel.app';
       const urlAtual = window.location.origin;
-      if (urlAtual && urlAtual.startsWith('http') && !urlAtual.includes('localhost') && !urlAtual.includes('127.0.0.1')) {
-        document.getElementById('img-qrcode-portaria').src =
-          `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(urlAtual)}`;
-        document.getElementById('url-placa-portaria').textContent = urlAtual;
-        document.getElementById('texto-whatsapp').value =
-          document.getElementById('texto-whatsapp').value.replace('https://vale-verde-clube-2-reservas.vercel.app', urlAtual);
-      }
+      const urlFinal = (urlAtual && urlAtual.startsWith('http') && !urlAtual.includes('localhost') && !urlAtual.includes('127.0.0.1'))
+        ? urlAtual
+        : urlOficial;
+
+      document.getElementById('img-qrcode-portaria').src =
+        `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(urlFinal)}`;
+      document.getElementById('url-placa-portaria').textContent = urlFinal;
+      document.getElementById('texto-whatsapp').value =
+        document.getElementById('texto-whatsapp').value.replace(urlOficial, urlFinal);
     }
 
     // Inicializa

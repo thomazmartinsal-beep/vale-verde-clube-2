@@ -22,7 +22,7 @@
         <div class="w-10 h-10 rounded-lg bg-emerald-600 flex items-center justify-center font-bold text-lg shadow">VV</div>
         <div>
           <h1 class="font-bold text-base sm:text-lg leading-tight">Vale Verde Clube 2</h1>
-          <p class="text-xs text-emerald-200">5 Blocos • 180 Apartamentos • Salão & Churrasqueiras</p>
+          <p class="text-xs text-emerald-200" id="subtitulo-header">5 Blocos • 180 Apartamentos • Salão & Churrasqueiras</p>
         </div>
       </div>
 
@@ -43,18 +43,18 @@
   <main class="max-w-6xl mx-auto px-4 py-6">
 
     <!-- ===================================================================== -->
-    <!-- MODO 1: VISÃO DO CONDÔMINO (ACESSO VIA QR CODE / LINK WHATSAPP)       -->
+    <!-- MODO 1: VISÃO DO CONDÔMINO (VALIDAÇÃO POR E-MAIL OU WHATSAPP)         -->
     <!-- ===================================================================== -->
     <section id="tela-morador">
 
-      <!-- Etapa 1: Identificação Rápida por Apartamento e Proprietário -->
+      <!-- Etapa 1: Identificação e Envio de Token por E-mail ou WhatsApp -->
       <div id="card-login-morador" class="max-w-md mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mt-4">
         <div class="text-center mb-5">
           <span class="inline-block px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold mb-2">
-            Acesso Rápido • Portaria & WhatsApp
+            Acesso Seguro • Verificação em 2 Etapas
           </span>
           <h2 class="text-xl font-bold text-slate-900">Identifique sua Unidade</h2>
-          <p class="text-sm text-slate-500 mt-1">Selecione seu bloco e apartamento para consultar datas e reservar.</p>
+          <p class="text-sm text-slate-500 mt-1">Selecione seu bloco e apartamento para receber o código de acesso.</p>
         </div>
 
         <div class="space-y-4">
@@ -73,22 +73,53 @@
             </div>
           </div>
 
-          <div class="bg-slate-50 border border-slate-200 rounded-lg p-3">
+          <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-1">
             <p class="text-xs text-slate-500">Proprietário Cadastrado:</p>
-            <p id="preview-proprietario" class="text-sm font-semibold text-slate-800 mt-0.5">—</p>
+            <p id="preview-proprietario" class="text-sm font-semibold text-slate-800">—</p>
+            <div class="flex flex-wrap gap-3 pt-1 text-[11px] text-slate-500">
+              <span id="preview-whatsapp">📱 —</span>
+              <span id="preview-email">✉️ —</span>
+            </div>
           </div>
 
+          <!-- Escolha do Canal de Validação -->
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Confirme os 4 primeiros dígitos do CPF</label>
-            <input type="text" id="input-cpf-4" maxlength="4" value="1234" placeholder="Use 1234 para testar"
-              class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm tracking-widest focus:ring-2 focus:ring-emerald-500 outline-none" />
-            <p class="text-[11px] text-slate-400 mt-1">* Código padrão de demonstração: <strong>1234</strong></p>
+            <label class="block text-xs font-semibold text-slate-600 mb-1.5">Receber código de validação por:</label>
+            <div class="grid grid-cols-2 gap-2.5">
+              <button type="button" onclick="selecionarCanalValidacao('whatsapp')" id="btn-canal-whatsapp"
+                class="py-2.5 px-3 rounded-xl border-2 border-emerald-600 bg-emerald-50 text-emerald-800 text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                💬 WhatsApp
+              </button>
+              <button type="button" onclick="selecionarCanalValidacao('email')" id="btn-canal-email"
+                class="py-2.5 px-3 rounded-xl border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+                ✉️ E-mail
+              </button>
+            </div>
           </div>
 
-          <button onclick="entrarComoMorador()"
-            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition shadow-sm">
-            Acessar Agenda de Reservas
+          <!-- Botão Enviar Código -->
+          <button type="button" onclick="enviarCodigoValidacao()" id="btn-enviar-codigo"
+            class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2.5 rounded-xl text-sm transition shadow-sm">
+            Enviar Código de Verificação
           </button>
+
+          <!-- Box do Código Recebido (Abre após solicitar o envio) -->
+          <div id="box-codigo-validacao" class="hidden pt-3 border-t border-slate-200 space-y-3">
+            <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-2.5 text-xs text-emerald-900" id="aviso-envio-token">
+              Código enviado!
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Digite o código de 6 dígitos recebido</label>
+              <input type="text" id="input-token-acesso" maxlength="6" placeholder="000000"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-center text-base font-mono font-bold tracking-[0.35em] focus:ring-2 focus:ring-emerald-500 outline-none" />
+            </div>
+
+            <button type="button" onclick="validarCodigoEEntrar()"
+              class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition shadow-sm">
+              Validar Código e Acessar Agenda
+            </button>
+          </div>
         </div>
       </div>
 
@@ -102,13 +133,13 @@
               B1-101
             </div>
             <div>
-              <p class="text-xs text-slate-500">Unidade Conectada</p>
+              <p class="text-xs text-slate-500">Unidade Validada</p>
               <h2 class="font-bold text-slate-900" id="lbl-morador-nome">—</h2>
               <p class="text-xs text-emerald-700 font-medium" id="lbl-morador-unidade">—</p>
             </div>
           </div>
           <button onclick="sairMorador()" class="text-xs font-medium text-slate-500 hover:text-red-600 underline">
-            Trocar Apartamento
+            Sair / Trocar Apartamento
           </button>
         </div>
 
@@ -202,7 +233,7 @@
 
       <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-wrap items-center justify-between gap-4">
         <div>
-          <span class="text-xs font-semibold uppercase tracking-wider text-emerald-700">Administração Vale Verde Clube 2 (180 Unidades)</span>
+          <span class="text-xs font-semibold uppercase tracking-wider text-emerald-700">Administração Vale Verde Clube 2</span>
           <h2 class="text-lg font-bold text-slate-900">Painel de Controle de Reservas, Prazos & Lançamentos ($)</h2>
         </div>
         <div class="flex items-center gap-2">
@@ -228,7 +259,7 @@
         </button>
         <button onclick="mudarAbaGestao('unidades')" id="tab-unidades"
           class="px-4 py-2 rounded-lg text-sm font-semibold bg-white text-slate-600 hover:bg-slate-50 border border-slate-200">
-          🏢 Apartamentos & Proprietários (180)
+          🏢 Blocos, Apartamentos & Contatos
         </button>
         <button onclick="mudarAbaGestao('qrcode')" id="tab-qrcode"
           class="px-4 py-2 rounded-lg text-sm font-semibold bg-white text-slate-600 hover:bg-slate-50 border border-slate-200">
@@ -313,57 +344,76 @@
         </div>
       </div>
 
-      <!-- ABA 3: GERENCIAMENTO DE APARTAMENTOS E PROPRIETÁRIOS -->
-      <div id="conteudo-unidades" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-        <div class="flex flex-wrap items-end justify-between gap-4 mb-5 pb-5 border-b border-slate-200">
-          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 flex-1">
+      <!-- ABA 3: GERENCIAMENTO DE BLOCOS, APARTAMENTOS E CONTATOS -->
+      <div id="conteudo-unidades" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-5">
+
+        <!-- Formulário de Cadastro / Atualização de Unidade -->
+        <div class="pb-5 border-b border-slate-200">
+          <h3 class="font-bold text-sm text-slate-900 mb-3">Cadastrar ou Atualizar Apartamento</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-5 gap-3">
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">Bloco</label>
-              <select id="novo-bloco" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white">
-                <option value="Bloco 1">Bloco 1</option>
-                <option value="Bloco 2">Bloco 2</option>
-                <option value="Bloco 3">Bloco 3</option>
-                <option value="Bloco 4">Bloco 4</option>
-                <option value="Bloco 5">Bloco 5</option>
-              </select>
+              <input type="text" id="novo-bloco" placeholder="Ex: Bloco 1" value="Bloco 1"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">Apartamento</label>
-              <input type="text" id="novo-ap" placeholder="Ex: 904" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+              <input type="text" id="novo-ap" placeholder="Ex: 904"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Nome do Proprietário</label>
-              <input type="text" id="novo-proprietario" placeholder="Nome completo" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Proprietário</label>
+              <input type="text" id="novo-proprietario" placeholder="Nome completo"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">4 Dígitos CPF</label>
-              <input type="text" id="novo-cpf4" maxlength="4" placeholder="Ex: 5678" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+              <label class="block text-xs font-semibold text-slate-600 mb-1">WhatsApp</label>
+              <input type="text" id="novo-whatsapp" placeholder="(82) 99999-0000"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">E-mail</label>
+              <input type="email" id="novo-email" placeholder="morador@email.com"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
             </div>
           </div>
-          <button onclick="adicionarUnidade()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2 rounded-lg text-sm">
-            + Cadastrar / Atualizar
-          </button>
+          <div class="mt-3 flex justify-end">
+            <button onclick="adicionarUnidade()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2 rounded-lg text-sm">
+              + Cadastrar / Atualizar Unidade
+            </button>
+          </div>
         </div>
 
-        <!-- Filtro de Busca entre os 180 Apartamentos -->
-        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <!-- Gerenciamento de Blocos (Excluir Bloco Inteiro) -->
+        <div class="bg-rose-50/60 border border-rose-200 rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p class="text-xs font-bold text-rose-900">Gerenciar Blocos Cadastrados</p>
+            <p class="text-[11px] text-rose-700">Exclua um bloco inteiro e todas as suas unidades caso não façam parte do condomínio:</p>
+          </div>
+          <div id="lista-botoes-excluir-bloco" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <!-- Filtro de Busca -->
+        <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2 flex-1 max-w-md">
             <input type="text" id="busca-unidade" oninput="renderizarTabelaUnidades()"
-              placeholder="Buscar por bloco, apartamento (ex: 402) ou proprietário..."
+              placeholder="Buscar por bloco, apartamento (ex: 402), nome, WhatsApp ou e-mail..."
               class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none" />
           </div>
-          <span class="text-xs text-slate-500" id="contador-unidades">180 unidades cadastradas</span>
+          <span class="text-xs text-slate-500 font-medium" id="contador-unidades">180 unidades cadastradas</span>
         </div>
 
+        <!-- Tabela de Apartamentos com Botão Excluir Individual -->
         <div class="max-h-96 overflow-y-auto border border-slate-100 rounded-xl">
           <table class="w-full text-left border-collapse text-sm">
             <thead class="sticky top-0 bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500">
               <tr>
                 <th class="py-2.5 px-3">Bloco</th>
-                <th class="py-2.5 px-3">Apartamento</th>
+                <th class="py-2.5 px-3">Ap</th>
                 <th class="py-2.5 px-3">Proprietário</th>
-                <th class="py-2.5 px-3">Código Acesso (CPF)</th>
+                <th class="py-2.5 px-3">WhatsApp / E-mail</th>
                 <th class="py-2.5 px-3">Situação</th>
+                <th class="py-2.5 px-3 text-right">Ações</th>
               </tr>
             </thead>
             <tbody id="tabela-unidades-gestao" class="divide-y divide-slate-100"></tbody>
@@ -381,12 +431,13 @@
           <p class="text-xs text-slate-500 mt-1 mb-4">Aponte a câmera do seu celular para o QR Code abaixo</p>
 
           <div class="inline-block p-3 bg-white border border-slate-200 rounded-xl shadow-inner mb-4">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://valeverdeclube2.condominio.app/reservas"
+            <img id="img-qrcode-portaria"
+              src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://vale-verde-clube-2-reservas.vercel.app"
               alt="QR Code Reservas Vale Verde Clube 2" class="w-44 h-44 mx-auto" />
           </div>
 
-          <p class="text-xs font-mono text-slate-600 bg-slate-100 py-1.5 px-3 rounded-lg mb-4">
-            https://valeverdeclube2.condominio.app/reservas
+          <p id="url-placa-portaria" class="text-xs font-mono text-slate-600 bg-slate-100 py-1.5 px-3 rounded-lg mb-4">
+            https://vale-verde-clube-2-reservas.vercel.app
           </p>
 
           <button onclick="window.print()" class="no-print bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg">
@@ -403,11 +454,11 @@
 
 Olá, vizinhos! Agora os agendamentos do *Salão de Festas* (até 120 pessoas) e das *Churrasqueiras* (até 20 pessoas) são feitos diretamente pelo link abaixo ou pelo QR Code na portaria:
 
-🔗 https://valeverdeclube2.condominio.app/reservas
+🔗 https://vale-verde-clube-2-reservas.vercel.app
 
-✅ Selecione seu Bloco (1 a 5) e Apartamento
-✅ Consulte o calendário em tempo real
-✅ Acompanhe prazos de cancelamento e regras
+✅ Selecione seu Bloco e Apartamento
+✅ Valide seu acesso com código rápido no WhatsApp ou E-mail
+✅ Consulte o calendário em tempo real e regras
 
 _Administração Vale Verde Clube 2_</textarea>
           </div>
@@ -437,19 +488,20 @@ _Administração Vale Verde Clube 2_</textarea>
       const lista = [];
       let idCounter = 1;
 
-      // 5 Blocos (1 a 5), 9 andares por bloco, 4 apartamentos por andar = 180 unidades
       for (let bloco = 1; bloco <= 5; bloco++) {
         for (let andar = 1; andar <= 9; andar++) {
           for (let finalAp = 1; finalAp <= 4; finalAp++) {
             const numeroAp = `${andar}0${finalAp}`;
             const nome = nomesExemplo[(idCounter - 1) % nomesExemplo.length];
+            const primeiroNome = nome.split(' ')[0].toLowerCase();
             lista.push({
               id: idCounter,
               bloco: `Bloco ${bloco}`,
               ap: numeroAp,
               proprietario: `${nome} (B${bloco}-${numeroAp})`,
-              cpf4: '1234',
-              adimplente: idCounter % 25 !== 0 // Simula algumas unidades inadimplentes para teste
+              whatsapp: `(82) 99${String(100 + idCounter).slice(-3)}-${String(4000 + idCounter).slice(-4)}`,
+              email: `${primeiroNome}.b${bloco}ap${numeroAp}@email.com`,
+              adimplente: idCounter % 25 !== 0
             });
             idCounter++;
           }
@@ -503,18 +555,38 @@ _Administração Vale Verde Clube 2_</textarea>
           observacaoFinanceira: 'Isento'
         }
       ],
+      canalValidacao: 'whatsapp',
+      tokenGerado: null,
+      unidadePendenteValidacaoId: null,
       unidadeLogada: null,
       espacoSelecionadoId: 'salao',
       diaSelecionado: null
     };
 
-    const DIA_ATUAL_SIMULADO = 19; // Hoje: 19/11/2026
+    const DIA_ATUAL_SIMULADO = 19;
 
     function mostrarToast(msg) {
       const t = document.getElementById('toast');
       t.textContent = msg;
       t.classList.remove('hidden');
-      setTimeout(() => t.classList.add('hidden'), 3500);
+      setTimeout(() => t.classList.add('hidden'), 4500);
+    }
+
+    function mascararWhatsapp(tel) {
+      if (!tel) return 'Não cadastrado';
+      return tel.replace(/(\(\d{2}\)\s*\d)\d{4}(-\d{4})/, '$1****$2');
+    }
+
+    function mascararEmail(email) {
+      if (!email || !email.includes('@')) return 'Não cadastrado';
+      const [user, dom] = email.split('@');
+      return `${user.slice(0, 2)}****@${dom}`;
+    }
+
+    function atualizarResumoHeader() {
+      const blocosUnicos = [...new Set(state.unidades.map(u => u.bloco))];
+      document.getElementById('subtitulo-header').textContent =
+        `${blocosUnicos.length} Blocos • ${state.unidades.length} Apartamentos • Salão & Churrasqueiras`;
     }
 
     function mudarModo(modo) {
@@ -539,6 +611,7 @@ _Administração Vale Verde Clube 2_</textarea>
       const blocos = [...new Set(state.unidades.map(u => u.bloco))];
       selBloco.innerHTML = blocos.map(b => `<option value="${b}">${b}</option>`).join('');
       atualizarSelectApartamentos();
+      atualizarResumoHeader();
     }
 
     function atualizarSelectApartamentos() {
@@ -554,20 +627,77 @@ _Administração Vale Verde Clube 2_</textarea>
       const id = Number(document.getElementById('sel-ap').value);
       const u = state.unidades.find(x => x.id === id);
       document.getElementById('preview-proprietario').textContent = u ? u.proprietario : '—';
+      document.getElementById('preview-whatsapp').textContent = u ? `📱 ${mascararWhatsapp(u.whatsapp)}` : '📱 —';
+      document.getElementById('preview-email').textContent = u ? `✉️ ${mascararEmail(u.email)}` : '✉️ —';
+
+      // Reseta etapa do token se trocar de apartamento
+      document.getElementById('box-codigo-validacao').classList.add('hidden');
+      state.tokenGerado = null;
     }
 
-    function entrarComoMorador() {
-      const id = Number(document.getElementById('sel-ap').value);
-      const cpf4 = document.getElementById('input-cpf-4').value.trim();
-      const unidade = state.unidades.find(x => x.id === id);
+    function selecionarCanalValidacao(canal) {
+      state.canalValidacao = canal;
+      const isZap = canal === 'whatsapp';
 
-      if (!unidade) return;
-      if (cpf4 !== unidade.cpf4) {
-        mostrarToast('⚠️ Código incorreto. Use 1234 para testar.');
+      document.getElementById('btn-canal-whatsapp').className = isZap
+        ? 'py-2.5 px-3 rounded-xl border-2 border-emerald-600 bg-emerald-50 text-emerald-800 text-xs font-bold flex items-center justify-center gap-1.5 transition'
+        : 'py-2.5 px-3 rounded-xl border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 text-xs font-semibold flex items-center justify-center gap-1.5 transition';
+
+      document.getElementById('btn-canal-email').className = !isZap
+        ? 'py-2.5 px-3 rounded-xl border-2 border-emerald-600 bg-emerald-50 text-emerald-800 text-xs font-bold flex items-center justify-center gap-1.5 transition'
+        : 'py-2.5 px-3 rounded-xl border border-slate-300 bg-white text-slate-600 hover:bg-slate-50 text-xs font-semibold flex items-center justify-center gap-1.5 transition';
+    }
+
+    function enviarCodigoValidacao() {
+      const id = Number(document.getElementById('sel-ap').value);
+      const u = state.unidades.find(x => x.id === id);
+      if (!u) return;
+
+      const destino = state.canalValidacao === 'whatsapp' ? u.whatsapp : u.email;
+      if (!destino) {
+        mostrarToast(`⚠️ Esta unidade não possui ${state.canalValidacao === 'whatsapp' ? 'WhatsApp' : 'E-mail'} cadastrado.`);
         return;
       }
 
+      // Gera código aleatório de 6 dígitos
+      const codigo = String(Math.floor(100000 + Math.random() * 900000));
+      state.tokenGerado = codigo;
+      state.unidadePendenteValidacaoId = u.id;
+
+      const destinoMascarado = state.canalValidacao === 'whatsapp'
+        ? mascararWhatsapp(u.whatsapp)
+        : mascararEmail(u.email);
+
+      const nomeCanal = state.canalValidacao === 'whatsapp' ? 'WhatsApp' : 'E-mail';
+
+      document.getElementById('box-codigo-validacao').classList.remove('hidden');
+      document.getElementById('aviso-envio-token').innerHTML = `
+        Código enviado via <strong>${nomeCanal}</strong> para <strong>${destinoMascarado}</strong>.<br>
+        <span class="text-[11px] text-emerald-700">(Simulação de entrega — seu código é: <strong>${codigo}</strong>)</span>
+      `;
+      document.getElementById('input-token-acesso').value = codigo;
+      mostrarToast(`📩 Código ${codigo} enviado para ${nomeCanal}!`);
+    }
+
+    function validarCodigoEEntrar() {
+      const id = Number(document.getElementById('sel-ap').value);
+      const digitado = document.getElementById('input-token-acesso').value.trim();
+
+      if (!state.tokenGerado || state.unidadePendenteValidacaoId !== id) {
+        mostrarToast('⚠️ Solicite o envio do código primeiro.');
+        return;
+      }
+
+      if (digitado !== state.tokenGerado) {
+        mostrarToast('❌ Código inválido. Verifique os 6 dígitos enviados.');
+        return;
+      }
+
+      const unidade = state.unidades.find(x => x.id === id);
+      if (!unidade) return;
+
       state.unidadeLogada = unidade;
+      state.tokenGerado = null;
       document.getElementById('card-login-morador').classList.add('hidden');
       document.getElementById('area-logada-morador').classList.remove('hidden');
       renderizarAreaMorador();
@@ -576,6 +706,7 @@ _Administração Vale Verde Clube 2_</textarea>
     function sairMorador() {
       state.unidadeLogada = null;
       state.diaSelecionado = null;
+      document.getElementById('box-codigo-validacao').classList.add('hidden');
       document.getElementById('card-login-morador').classList.remove('hidden');
       document.getElementById('area-logada-morador').classList.add('hidden');
     }
@@ -621,7 +752,6 @@ _Administração Vale Verde Clube 2_</textarea>
     function renderizarCalendario() {
       const grid = document.getElementById('grid-calendario');
       const espacoId = state.espacoSelecionadoId;
-      // Novembro 2026 começa num Domingo (30 dias)
       let html = '';
 
       for (let dia = 1; dia <= 30; dia++) {
@@ -786,7 +916,7 @@ _Administração Vale Verde Clube 2_</textarea>
       let totalPendente = 0;
       const tbodyFin = document.getElementById('tabela-lancamentos-gestao');
       tbodyFin.innerHTML = state.reservas.map(r => {
-        const u = state.unidades.find(x => x.id === r.unidadeId);
+        const u = state.unidades.find(x => x.id === r.unidadeId) || { bloco: 'Bloco ?', ap: '?', proprietario: 'Unidade Removida' };
         const espaco = state.espacos.find(e => e.id === r.espacoId);
         if (r.valor > 0 && !r.lancadoBoleto) totalPendente += r.valor;
 
@@ -824,7 +954,54 @@ _Administração Vale Verde Clube 2_</textarea>
       }).join('');
 
       document.getElementById('total-lancar-boleto').textContent = `R$ ${totalPendente.toFixed(2)}`;
+      renderizarBotoesBlocos();
       renderizarTabelaUnidades();
+    }
+
+    function renderizarBotoesBlocos() {
+      const blocos = [...new Set(state.unidades.map(u => u.bloco))];
+      const container = document.getElementById('lista-botoes-excluir-bloco');
+      if (blocos.length === 0) {
+        container.innerHTML = `<span class="text-xs text-slate-500">Nenhum bloco cadastrado.</span>`;
+        return;
+      }
+
+      container.innerHTML = blocos.map(b => {
+        const qtd = state.unidades.filter(u => u.bloco === b).length;
+        return `
+          <button onclick="excluirBloco('${b}')"
+            class="px-3 py-1.5 rounded-lg bg-white border border-rose-300 text-rose-700 hover:bg-rose-600 hover:text-white text-xs font-semibold transition flex items-center gap-1.5">
+            <span>🗑️ Excluir ${b}</span>
+            <span class="text-[10px] opacity-75">(${qtd} aps)</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function excluirBloco(nomeBloco) {
+      const qtd = state.unidades.filter(u => u.bloco === nomeBloco).length;
+      const confirmar = confirm(
+        `ATENÇÃO: Deseja excluir o "${nomeBloco}" inteiro?\n\nIsso removerá todos os ${qtd} apartamentos vinculados a ele.`
+      );
+      if (!confirmar) return;
+
+      state.unidades = state.unidades.filter(u => u.bloco !== nomeBloco);
+      popularSelectBlocos();
+      renderizarPainelGestao();
+      mostrarToast(`🗑️ ${nomeBloco} e seus ${qtd} apartamentos foram excluídos.`);
+    }
+
+    function excluirUnidade(id) {
+      const u = state.unidades.find(x => x.id === id);
+      if (!u) return;
+
+      const confirmar = confirm(`Deseja excluir o ${u.bloco} - Apartamento ${u.ap} (${u.proprietario})?`);
+      if (!confirmar) return;
+
+      state.unidades = state.unidades.filter(x => x.id !== id);
+      popularSelectBlocos();
+      renderizarPainelGestao();
+      mostrarToast(`🗑️ ${u.bloco} - Ap ${u.ap} excluído com sucesso.`);
     }
 
     function renderizarTabelaUnidades() {
@@ -832,7 +1009,9 @@ _Administração Vale Verde Clube 2_</textarea>
       const filtradas = state.unidades.filter(u =>
         u.bloco.toLowerCase().includes(termo) ||
         u.ap.toLowerCase().includes(termo) ||
-        u.proprietario.toLowerCase().includes(termo)
+        u.proprietario.toLowerCase().includes(termo) ||
+        (u.whatsapp || '').toLowerCase().includes(termo) ||
+        (u.email || '').toLowerCase().includes(termo)
       );
 
       document.getElementById('contador-unidades').textContent =
@@ -844,11 +1023,20 @@ _Administração Vale Verde Clube 2_</textarea>
           <td class="py-2.5 px-3 font-medium">${u.bloco}</td>
           <td class="py-2.5 px-3 font-bold">Ap ${u.ap}</td>
           <td class="py-2.5 px-3">${u.proprietario}</td>
-          <td class="py-2.5 px-3 font-mono text-xs">${u.cpf4}****</td>
+          <td class="py-2.5 px-3 text-xs text-slate-600">
+            <div>📱 ${u.whatsapp || '—'}</div>
+            <div class="text-slate-400">✉️ ${u.email || '—'}</div>
+          </td>
           <td class="py-2.5 px-3">
             <button onclick="alternarAdimplencia(${u.id})"
               class="px-2.5 py-1 rounded-full text-xs font-semibold ${u.adimplente ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
-              ${u.adimplente ? 'Adimplente (Liberado)' : 'Inadimplente (Bloqueado)'}
+              ${u.adimplente ? 'Adimplente' : 'Inadimplente'}
+            </button>
+          </td>
+          <td class="py-2.5 px-3 text-right">
+            <button onclick="excluirUnidade(${u.id})"
+              class="px-2.5 py-1 rounded-lg border border-rose-200 text-rose-700 hover:bg-rose-600 hover:text-white text-xs font-semibold transition">
+              🗑️ Excluir
             </button>
           </td>
         </tr>
@@ -875,29 +1063,32 @@ _Administração Vale Verde Clube 2_</textarea>
     }
 
     function adicionarUnidade() {
-      const bloco = document.getElementById('novo-bloco').value;
+      const bloco = document.getElementById('novo-bloco').value.trim();
       const ap = document.getElementById('novo-ap').value.trim();
       const proprietario = document.getElementById('novo-proprietario').value.trim();
-      const cpf4 = document.getElementById('novo-cpf4').value.trim();
+      const whatsapp = document.getElementById('novo-whatsapp').value.trim();
+      const email = document.getElementById('novo-email').value.trim();
 
-      if (!bloco || !ap || !proprietario || cpf4.length !== 4) {
-        mostrarToast('⚠️ Preencha Bloco, Apartamento, Proprietário e 4 dígitos do CPF.');
+      if (!bloco || !ap || !proprietario || (!whatsapp && !email)) {
+        mostrarToast('⚠️ Preencha Bloco, Apartamento, Proprietário e pelo menos WhatsApp ou E-mail.');
         return;
       }
 
-      const existente = state.unidades.find(u => u.bloco === bloco && u.ap === ap);
+      const existente = state.unidades.find(u => u.bloco.toLowerCase() === bloco.toLowerCase() && u.ap === ap);
       if (existente) {
         existente.proprietario = proprietario;
-        existente.cpf4 = cpf4;
+        existente.whatsapp = whatsapp;
+        existente.email = email;
         mostrarToast(`🔄 Dados do ${bloco} - Ap ${ap} atualizados!`);
       } else {
-        state.unidades.push({ id: Date.now(), bloco, ap, proprietario, cpf4, adimplente: true });
+        state.unidades.push({ id: Date.now(), bloco, ap, proprietario, whatsapp, email, adimplente: true });
         mostrarToast('🏢 Nova unidade cadastrada!');
       }
 
       document.getElementById('novo-ap').value = '';
       document.getElementById('novo-proprietario').value = '';
-      document.getElementById('novo-cpf4').value = '';
+      document.getElementById('novo-whatsapp').value = '';
+      document.getElementById('novo-email').value = '';
 
       popularSelectBlocos();
       renderizarPainelGestao();
@@ -916,8 +1107,21 @@ _Administração Vale Verde Clube 2_</textarea>
       mostrarToast('📋 Mensagem copiada para colar no WhatsApp!');
     }
 
-    // Inicializa selects ao abrir
+    // Atualiza QR Code automaticamente com a URL real onde o site está hospedado
+    function sincronizarUrlReal() {
+      const urlAtual = window.location.origin;
+      if (urlAtual && urlAtual.startsWith('http') && !urlAtual.includes('localhost') && !urlAtual.includes('127.0.0.1')) {
+        document.getElementById('img-qrcode-portaria').src =
+          `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(urlAtual)}`;
+        document.getElementById('url-placa-portaria').textContent = urlAtual;
+        document.getElementById('texto-whatsapp').value =
+          document.getElementById('texto-whatsapp').value.replace('https://vale-verde-clube-2-reservas.vercel.app', urlAtual);
+      }
+    }
+
+    // Inicializa
     popularSelectBlocos();
+    sincronizarUrlReal();
   </script>
 </body>
 </html>

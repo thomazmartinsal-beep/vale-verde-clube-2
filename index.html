@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vale Verde Clube 2 — Sistema de Reservas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    @media print {
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen">
+
+  <!-- Barra Superior de Navegação -->
+  <header class="bg-emerald-900 text-white shadow-md no-print">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-emerald-600 flex items-center justify-center font-bold text-lg shadow">VV</div>
+        <div>
+          <h1 class="font-bold text-base sm:text-lg leading-tight">Vale Verde Clube 2</h1>
+          <p class="text-xs text-emerald-200">5 Blocos • 180 Apartamentos • Salão & Churrasqueiras</p>
+        </div>
+      </div>
+
+      <!-- Alternador de Perfil para Teste -->
+      <div class="flex items-center gap-2 bg-emerald-950/60 p-1 rounded-lg border border-emerald-700">
+        <button onclick="mudarModo('morador')" id="btn-modo-morador"
+          class="px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition bg-emerald-500 text-white shadow">
+          📱 Visão Condômino (QR/WhatsApp)
+        </button>
+        <button onclick="mudarModo('gestao')" id="btn-modo-gestao"
+          class="px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition text-emerald-200 hover:text-white">
+          🛡️ Painel Gestão (Síndico/Admin)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-6">
+
+    <!-- ===================================================================== -->
+    <!-- MODO 1: VISÃO DO CONDÔMINO (ACESSO VIA QR CODE / LINK WHATSAPP)       -->
+    <!-- ===================================================================== -->
+    <section id="tela-morador">
+
+      <!-- Etapa 1: Identificação Rápida por Apartamento e Proprietário -->
+      <div id="card-login-morador" class="max-w-md mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mt-4">
+        <div class="text-center mb-5">
+          <span class="inline-block px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold mb-2">
+            Acesso Rápido • Portaria & WhatsApp
+          </span>
+          <h2 class="text-xl font-bold text-slate-900">Identifique sua Unidade</h2>
+          <p class="text-sm text-slate-500 mt-1">Selecione seu bloco e apartamento para consultar datas e reservar.</p>
+        </div>
+
+        <div class="space-y-4">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Bloco</label>
+              <select id="sel-bloco" onchange="atualizarSelectApartamentos()"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Apartamento</label>
+              <select id="sel-ap" onchange="mostrarProprietarioPreview()"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+              </select>
+            </div>
+          </div>
+
+          <div class="bg-slate-50 border border-slate-200 rounded-lg p-3">
+            <p class="text-xs text-slate-500">Proprietário Cadastrado:</p>
+            <p id="preview-proprietario" class="text-sm font-semibold text-slate-800 mt-0.5">—</p>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Confirme os 4 primeiros dígitos do CPF</label>
+            <input type="text" id="input-cpf-4" maxlength="4" value="1234" placeholder="Use 1234 para testar"
+              class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm tracking-widest focus:ring-2 focus:ring-emerald-500 outline-none" />
+            <p class="text-[11px] text-slate-400 mt-1">* Código padrão de demonstração: <strong>1234</strong></p>
+          </div>
+
+          <button onclick="entrarComoMorador()"
+            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition shadow-sm">
+            Acessar Agenda de Reservas
+          </button>
+        </div>
+      </div>
+
+      <!-- Etapa 2: Área Logada do Condômino -->
+      <div id="area-logada-morador" class="hidden space-y-6">
+
+        <!-- Cabeçalho da Unidade Conectada -->
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center text-xs" id="badge-unidade">
+              B1-101
+            </div>
+            <div>
+              <p class="text-xs text-slate-500">Unidade Conectada</p>
+              <h2 class="font-bold text-slate-900" id="lbl-morador-nome">—</h2>
+              <p class="text-xs text-emerald-700 font-medium" id="lbl-morador-unidade">—</p>
+            </div>
+          </div>
+          <button onclick="sairMorador()" class="text-xs font-medium text-slate-500 hover:text-red-600 underline">
+            Trocar Apartamento
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          <!-- Coluna Esquerda/Central: Escolha do Espaço + Calendário -->
+          <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+            <h3 class="font-bold text-slate-900 mb-3">1. Escolha o Espaço</h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6" id="lista-espacos-cards"></div>
+
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-bold text-slate-900">2. Selecione a Data (<span id="titulo-mes-calendario">Novembro 2026</span>)</h3>
+              <div class="flex items-center gap-3 text-xs">
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Livre</span>
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Ocupado</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-7 text-center text-xs font-semibold text-slate-400 mb-2">
+              <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+            </div>
+
+            <div id="grid-calendario" class="grid grid-cols-7 gap-1.5"></div>
+          </div>
+
+          <!-- Coluna Direita: Resumo da Reserva & Minhas Reservas -->
+          <div class="space-y-6">
+
+            <div id="box-confirmar-reserva" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+              <h3 class="font-bold text-slate-900 mb-1">Resumo da Solicitação</h3>
+              <p class="text-xs text-slate-500 mb-4">Clique em um dia livre no calendário ao lado.</p>
+
+              <div id="detalhe-selecao" class="hidden space-y-4">
+                <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-200 space-y-2 text-sm">
+                  <div class="flex justify-between">
+                    <span class="text-slate-500">Espaço:</span>
+                    <span class="font-semibold text-slate-900" id="res-espaco">—</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-slate-500">Capacidade Máx.:</span>
+                    <span class="font-semibold text-slate-900" id="res-capacidade">—</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-slate-500">Data:</span>
+                    <span class="font-semibold text-slate-900" id="res-data">—</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-slate-500">Unidade:</span>
+                    <span class="font-semibold text-slate-900" id="res-unidade">—</span>
+                  </div>
+                  <div class="flex justify-between pt-2 border-t border-slate-200">
+                    <span class="text-slate-600 font-medium">Lançamento Condomínio:</span>
+                    <span class="font-bold text-emerald-700" id="res-valor">R$ 150,00</span>
+                  </div>
+                </div>
+
+                <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-900">
+                  <strong>Regra de Cancelamento:</strong> Cancelamentos gratuitos devem ser feitos com pelo menos
+                  <strong id="res-prazo-cancelamento">7 dias</strong> de antecedência. Após esse prazo, o valor será mantido no boleto.
+                </div>
+
+                <label class="flex items-start gap-2.5 text-xs text-slate-600 cursor-pointer">
+                  <input type="checkbox" id="chk-termo" class="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500" />
+                  <span>
+                    Autorizo o lançamento da taxa no boleto do condomínio da minha unidade e concordo com o regulamento interno.
+                  </span>
+                </label>
+
+                <button onclick="confirmarReserva()"
+                  class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition shadow-sm">
+                  Confirmar Reserva
+                </button>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+              <h3 class="font-bold text-slate-900 mb-3">Minhas Reservas</h3>
+              <div id="lista-minhas-reservas" class="space-y-3"></div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- MODO 2: PAINEL DE GESTÃO (ADMINISTRADOR, SÍNDICO E SUBSÍNDICO)        -->
+    <!-- ===================================================================== -->
+    <section id="tela-gestao" class="hidden space-y-6">
+
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <span class="text-xs font-semibold uppercase tracking-wider text-emerald-700">Administração Vale Verde Clube 2 (180 Unidades)</span>
+          <h2 class="text-lg font-bold text-slate-900">Painel de Controle de Reservas, Prazos & Lançamentos ($)</h2>
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-xs font-semibold text-slate-600">Perfil Ativo:</label>
+          <select id="sel-perfil-gestor"
+            class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold bg-slate-50">
+            <option value="Síndico">Síndico</option>
+            <option value="Subsíndico">Subsíndico</option>
+            <option value="Administrador">Administrador</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Abas Internas do Painel de Gestão -->
+      <div class="flex flex-wrap gap-2 border-b border-slate-200 pb-2 no-print">
+        <button onclick="mudarAbaGestao('financeiro')" id="tab-financeiro"
+          class="px-4 py-2 rounded-lg text-sm font-semibold bg-emerald-600 text-white">
+          💰 Lançamentos no Condomínio ($) & Reservas
+        </button>
+        <button onclick="mudarAbaGestao('prazos')" id="tab-prazos"
+          class="px-4 py-2 rounded-lg text-sm font-semibold bg-white text-slate-600 hover:bg-slate-50 border border-slate-200">
+          ⏱️ Prazos de Cancelamento & Taxas
+        </button>
+        <button onclick="mudarAbaGestao('unidades')" id="tab-unidades"
+          class="px-4 py-2 rounded-lg text-sm font-semibold bg-white text-slate-600 hover:bg-slate-50 border border-slate-200">
+          🏢 Apartamentos & Proprietários (180)
+        </button>
+        <button onclick="mudarAbaGestao('qrcode')" id="tab-qrcode"
+          class="px-4 py-2 rounded-lg text-sm font-semibold bg-white text-slate-600 hover:bg-slate-50 border border-slate-200">
+          📲 QR Code Portaria & WhatsApp
+        </button>
+      </div>
+
+      <!-- ABA 1: LANÇAMENTOS FINANCEIROS ($) E RESERVAS -->
+      <div id="conteudo-financeiro" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <h3 class="font-bold text-slate-900">Relatório de Reservas e Lançamentos no Boleto</h3>
+            <p class="text-xs text-slate-500">Taxas do Salão de Festas e eventuais multas por cancelamento fora do prazo.</p>
+          </div>
+          <div class="bg-emerald-50 border border-emerald-200 px-4 py-2 rounded-xl text-right">
+            <span class="text-xs text-emerald-700 block">Total a Lançar no Condomínio</span>
+            <strong class="text-lg text-emerald-900" id="total-lancar-boleto">R$ 0,00</strong>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr class="border-b border-slate-200 text-xs uppercase text-slate-500 bg-slate-50">
+                <th class="py-3 px-3">Data Evento</th>
+                <th class="py-3 px-3">Unidade / Proprietário</th>
+                <th class="py-3 px-3">Espaço</th>
+                <th class="py-3 px-3">Status</th>
+                <th class="py-3 px-3">Valor ($)</th>
+                <th class="py-3 px-3">Boleto Condomínio</th>
+                <th class="py-3 px-3 text-right">Ação</th>
+              </tr>
+            </thead>
+            <tbody id="tabela-lancamentos-gestao" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ABA 2: PRAZOS DE CANCELAMENTO & TAXAS -->
+      <div id="conteudo-prazos" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-6 max-w-2xl">
+        <h3 class="font-bold text-slate-900 mb-1">Regras de Prazo para Cancelamento e Valores</h3>
+        <p class="text-xs text-slate-500 mb-5">
+          Ajuste permitido para <strong>Administrador, Síndico e Subsíndico</strong>. As alterações valem imediatamente no link do morador.
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-3">
+            <h4 class="font-bold text-sm text-slate-800">🎉 Salão de Festas (Até 120 pessoas)</h4>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Prazo mínimo cancelamento (dias)</label>
+              <input type="number" id="cfg-prazo-salao" min="0" max="60"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Taxa lançamento condomínio (R$)</label>
+              <input type="number" id="cfg-taxa-salao" min="0" step="10"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white" />
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-3">
+            <h4 class="font-bold text-sm text-slate-800">🔥 Churrasqueiras (Até 20 pessoas)</h4>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Prazo mínimo cancelamento (dias)</label>
+              <input type="number" id="cfg-prazo-churras" min="0" max="60"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Taxa lançamento condomínio (R$)</label>
+              <input type="number" id="cfg-taxa-churras" min="0" step="10"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white" />
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-5 flex items-center justify-between">
+          <span id="log-alteracao-prazo" class="text-xs text-slate-500">Última atualização: Padrão do sistema</span>
+          <button onclick="salvarConfiguracoesPrazos()"
+            class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition">
+            Salvar Regras
+          </button>
+        </div>
+      </div>
+
+      <!-- ABA 3: GERENCIAMENTO DE APARTAMENTOS E PROPRIETÁRIOS -->
+      <div id="conteudo-unidades" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <div class="flex flex-wrap items-end justify-between gap-4 mb-5 pb-5 border-b border-slate-200">
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 flex-1">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Bloco</label>
+              <select id="novo-bloco" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white">
+                <option value="Bloco 1">Bloco 1</option>
+                <option value="Bloco 2">Bloco 2</option>
+                <option value="Bloco 3">Bloco 3</option>
+                <option value="Bloco 4">Bloco 4</option>
+                <option value="Bloco 5">Bloco 5</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Apartamento</label>
+              <input type="text" id="novo-ap" placeholder="Ex: 904" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Nome do Proprietário</label>
+              <input type="text" id="novo-proprietario" placeholder="Nome completo" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">4 Dígitos CPF</label>
+              <input type="text" id="novo-cpf4" maxlength="4" placeholder="Ex: 5678" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+            </div>
+          </div>
+          <button onclick="adicionarUnidade()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2 rounded-lg text-sm">
+            + Cadastrar / Atualizar
+          </button>
+        </div>
+
+        <!-- Filtro de Busca entre os 180 Apartamentos -->
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div class="flex items-center gap-2 flex-1 max-w-md">
+            <input type="text" id="busca-unidade" oninput="renderizarTabelaUnidades()"
+              placeholder="Buscar por bloco, apartamento (ex: 402) ou proprietário..."
+              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none" />
+          </div>
+          <span class="text-xs text-slate-500" id="contador-unidades">180 unidades cadastradas</span>
+        </div>
+
+        <div class="max-h-96 overflow-y-auto border border-slate-100 rounded-xl">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead class="sticky top-0 bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500">
+              <tr>
+                <th class="py-2.5 px-3">Bloco</th>
+                <th class="py-2.5 px-3">Apartamento</th>
+                <th class="py-2.5 px-3">Proprietário</th>
+                <th class="py-2.5 px-3">Código Acesso (CPF)</th>
+                <th class="py-2.5 px-3">Situação</th>
+              </tr>
+            </thead>
+            <tbody id="tabela-unidades-gestao" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ABA 4: QR CODE PARA PORTARIA E LINK WHATSAPP -->
+      <div id="conteudo-qrcode" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white rounded-2xl border-2 border-emerald-700 p-6 text-center shadow-sm">
+          <span class="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold mb-2">
+            VALE VERDE CLUBE 2
+          </span>
+          <h3 class="text-xl font-bold text-slate-900">Reserve o Salão de Festas ou Churrasqueira pelo Celular</h3>
+          <p class="text-xs text-slate-500 mt-1 mb-4">Aponte a câmera do seu celular para o QR Code abaixo</p>
+
+          <div class="inline-block p-3 bg-white border border-slate-200 rounded-xl shadow-inner mb-4">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://valeverdeclube2.condominio.app/reservas"
+              alt="QR Code Reservas Vale Verde Clube 2" class="w-44 h-44 mx-auto" />
+          </div>
+
+          <p class="text-xs font-mono text-slate-600 bg-slate-100 py-1.5 px-3 rounded-lg mb-4">
+            https://valeverdeclube2.condominio.app/reservas
+          </p>
+
+          <button onclick="window.print()" class="no-print bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg">
+            🖨️ Imprimir Placa para Portaria
+          </button>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between">
+          <div>
+            <h3 class="font-bold text-slate-900 mb-1">Texto para Grupos de WhatsApp</h3>
+            <p class="text-xs text-slate-500 mb-3">Copie e fixe na descrição do grupo oficial dos moradores:</p>
+            <textarea id="texto-whatsapp" rows="8" readonly
+              class="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700 leading-relaxed">🏡 *VALE VERDE CLUBE 2 — RESERVAS ONLINE*
+
+Olá, vizinhos! Agora os agendamentos do *Salão de Festas* (até 120 pessoas) e das *Churrasqueiras* (até 20 pessoas) são feitos diretamente pelo link abaixo ou pelo QR Code na portaria:
+
+🔗 https://valeverdeclube2.condominio.app/reservas
+
+✅ Selecione seu Bloco (1 a 5) e Apartamento
+✅ Consulte o calendário em tempo real
+✅ Acompanhe prazos de cancelamento e regras
+
+_Administração Vale Verde Clube 2_</textarea>
+          </div>
+          <button onclick="copiarTextoWhatsapp()"
+            class="mt-4 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl text-sm transition">
+            📋 Copiar Mensagem para WhatsApp
+          </button>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Toast de Notificação -->
+  <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white text-sm px-4 py-3 rounded-xl shadow-lg hidden z-50"></div>
+
+  <script>
+    // =========================================================================
+    // GERADOR DOS 5 BLOCOS E 180 APARTAMENTOS DO VALE VERDE CLUBE 2
+    // =========================================================================
+    function gerarUnidadesIniciais() {
+      const nomesExemplo = [
+        'Carlos Eduardo Silva', 'Mariana Costa Lima', 'Roberto Almeida Santos', 'Fernanda Oliveira Souza',
+        'João Pedro Nascimento', 'Patrícia Gomes Rocha', 'Lucas Mendes Ferreira', 'Juliana Alves Pereira',
+        'Marcos Vinícius Barbosa', 'Camila Ribeiro Martins', 'Rafael Araújo Correia', 'Beatriz Monteiro Dias'
+      ];
+      const lista = [];
+      let idCounter = 1;
+
+      // 5 Blocos (1 a 5), 9 andares por bloco, 4 apartamentos por andar = 180 unidades
+      for (let bloco = 1; bloco <= 5; bloco++) {
+        for (let andar = 1; andar <= 9; andar++) {
+          for (let finalAp = 1; finalAp <= 4; finalAp++) {
+            const numeroAp = `${andar}0${finalAp}`;
+            const nome = nomesExemplo[(idCounter - 1) % nomesExemplo.length];
+            lista.push({
+              id: idCounter,
+              bloco: `Bloco ${bloco}`,
+              ap: numeroAp,
+              proprietario: `${nome} (B${bloco}-${numeroAp})`,
+              cpf4: '1234',
+              adimplente: idCounter % 25 !== 0 // Simula algumas unidades inadimplentes para teste
+            });
+            idCounter++;
+          }
+        }
+      }
+      return lista;
+    }
+
+    const state = {
+      config: {
+        prazoCancelamentoSalao: 7,
+        prazoCancelamentoChurrasqueira: 2,
+        taxaSalao: 150.00,
+        taxaChurrasqueira: 0.00
+      },
+      unidades: gerarUnidadesIniciais(),
+      espacos: [
+        { id: 'salao', nome: 'Salão de Festas', tipo: 'salao', capacidade: 120, icone: '🎉' },
+        { id: 'churras1', nome: 'Churrasqueira 01', tipo: 'churrasqueira', capacidade: 20, icone: '🔥' },
+        { id: 'churras2', nome: 'Churrasqueira 02', tipo: 'churrasqueira', capacidade: 20, icone: '🥩' }
+      ],
+      reservas: [
+        {
+          id: 101,
+          espacoId: 'salao',
+          unidadeId: 2,
+          dia: 21,
+          status: 'confirmada',
+          valor: 150.00,
+          lancadoBoleto: false,
+          observacaoFinanceira: 'Taxa Salão de Festas'
+        },
+        {
+          id: 102,
+          espacoId: 'salao',
+          unidadeId: 1,
+          dia: 28,
+          status: 'confirmada',
+          valor: 150.00,
+          lancadoBoleto: false,
+          observacaoFinanceira: 'Taxa Salão de Festas'
+        },
+        {
+          id: 103,
+          espacoId: 'churras1',
+          unidadeId: 37,
+          dia: 22,
+          status: 'confirmada',
+          valor: 0.00,
+          lancadoBoleto: true,
+          observacaoFinanceira: 'Isento'
+        }
+      ],
+      unidadeLogada: null,
+      espacoSelecionadoId: 'salao',
+      diaSelecionado: null
+    };
+
+    const DIA_ATUAL_SIMULADO = 19; // Hoje: 19/11/2026
+
+    function mostrarToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.remove('hidden');
+      setTimeout(() => t.classList.add('hidden'), 3500);
+    }
+
+    function mudarModo(modo) {
+      const isMorador = modo === 'morador';
+      document.getElementById('tela-morador').classList.toggle('hidden', !isMorador);
+      document.getElementById('tela-gestao').classList.toggle('hidden', isMorador);
+
+      document.getElementById('btn-modo-morador').className = isMorador
+        ? 'px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition bg-emerald-500 text-white shadow'
+        : 'px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition text-emerald-200 hover:text-white';
+
+      document.getElementById('btn-modo-gestao').className = !isMorador
+        ? 'px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition bg-emerald-500 text-white shadow'
+        : 'px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium transition text-emerald-200 hover:text-white';
+
+      if (!isMorador) renderizarPainelGestao();
+      else if (state.unidadeLogada) renderizarAreaMorador();
+    }
+
+    function popularSelectBlocos() {
+      const selBloco = document.getElementById('sel-bloco');
+      const blocos = [...new Set(state.unidades.map(u => u.bloco))];
+      selBloco.innerHTML = blocos.map(b => `<option value="${b}">${b}</option>`).join('');
+      atualizarSelectApartamentos();
+    }
+
+    function atualizarSelectApartamentos() {
+      const bloco = document.getElementById('sel-bloco').value;
+      const selAp = document.getElementById('sel-ap');
+      const filtradas = state.unidades.filter(u => u.bloco === bloco);
+
+      selAp.innerHTML = filtradas.map(u => `<option value="${u.id}">Ap ${u.ap}</option>`).join('');
+      mostrarProprietarioPreview();
+    }
+
+    function mostrarProprietarioPreview() {
+      const id = Number(document.getElementById('sel-ap').value);
+      const u = state.unidades.find(x => x.id === id);
+      document.getElementById('preview-proprietario').textContent = u ? u.proprietario : '—';
+    }
+
+    function entrarComoMorador() {
+      const id = Number(document.getElementById('sel-ap').value);
+      const cpf4 = document.getElementById('input-cpf-4').value.trim();
+      const unidade = state.unidades.find(x => x.id === id);
+
+      if (!unidade) return;
+      if (cpf4 !== unidade.cpf4) {
+        mostrarToast('⚠️ Código incorreto. Use 1234 para testar.');
+        return;
+      }
+
+      state.unidadeLogada = unidade;
+      document.getElementById('card-login-morador').classList.add('hidden');
+      document.getElementById('area-logada-morador').classList.remove('hidden');
+      renderizarAreaMorador();
+    }
+
+    function sairMorador() {
+      state.unidadeLogada = null;
+      state.diaSelecionado = null;
+      document.getElementById('card-login-morador').classList.remove('hidden');
+      document.getElementById('area-logada-morador').classList.add('hidden');
+    }
+
+    function renderizarAreaMorador() {
+      const u = state.unidadeLogada;
+      document.getElementById('badge-unidade').textContent = `${u.bloco.replace('Bloco ', 'B')}-${u.ap}`;
+      document.getElementById('lbl-morador-nome').textContent = u.proprietario;
+      document.getElementById('lbl-morador-unidade').textContent = `${u.bloco} • Apartamento ${u.ap}`;
+
+      const containerEspacos = document.getElementById('lista-espacos-cards');
+      containerEspacos.innerHTML = state.espacos.map(e => {
+        const ativo = e.id === state.espacoSelecionadoId;
+        const taxa = e.tipo === 'salao' ? state.config.taxaSalao : state.config.taxaChurrasqueira;
+        return `
+          <button onclick="selecionarEspaco('${e.id}')"
+            class="text-left p-3.5 rounded-xl border transition ${ativo
+              ? 'border-emerald-600 bg-emerald-50/70 ring-2 ring-emerald-500/20'
+              : 'border-slate-200 hover:border-emerald-300 bg-white'}">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-lg">${e.icone}</span>
+              <span class="text-xs font-bold ${taxa > 0 ? 'text-emerald-700' : 'text-slate-500'}">
+                ${taxa > 0 ? `R$ ${taxa.toFixed(2)}` : 'Gratuito'}
+              </span>
+            </div>
+            <p class="font-bold text-sm text-slate-900">${e.nome}</p>
+            <p class="text-xs text-slate-500">Até ${e.capacidade} pessoas</p>
+          </button>
+        `;
+      }).join('');
+
+      renderizarCalendario();
+      renderizarMinhasReservas();
+    }
+
+    function selecionarEspaco(id) {
+      state.espacoSelecionadoId = id;
+      state.diaSelecionado = null;
+      document.getElementById('detalhe-selecao').classList.add('hidden');
+      renderizarAreaMorador();
+    }
+
+    function renderizarCalendario() {
+      const grid = document.getElementById('grid-calendario');
+      const espacoId = state.espacoSelecionadoId;
+      // Novembro 2026 começa num Domingo (30 dias)
+      let html = '';
+
+      for (let dia = 1; dia <= 30; dia++) {
+        const ocupado = state.reservas.some(
+          r => r.espacoId === espacoId && r.dia === dia && r.status === 'confirmada'
+        );
+        const passado = dia < DIA_ATUAL_SIMULADO;
+        const selecionado = state.diaSelecionado === dia;
+
+        if (passado) {
+          html += `<div class="h-11 rounded-lg bg-slate-100 text-slate-400 flex items-center justify-center text-xs">${dia}</div>`;
+        } else if (ocupado) {
+          html += `<div class="h-11 rounded-lg bg-rose-100 text-rose-700 font-semibold flex flex-col items-center justify-center text-xs cursor-not-allowed">
+            <span>${dia}</span><span class="text-[9px]">Ocupado</span>
+          </div>`;
+        } else {
+          html += `<button onclick="selecionarDia(${dia})"
+            class="h-11 rounded-lg font-semibold flex flex-col items-center justify-center text-xs transition border
+            ${selecionado
+              ? 'bg-emerald-600 text-white border-emerald-700 shadow'
+              : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'}">
+            <span>${dia}</span><span class="text-[9px]">Livre</span>
+          </button>`;
+        }
+      }
+      grid.innerHTML = html;
+    }
+
+    function selecionarDia(dia) {
+      state.diaSelecionado = dia;
+      renderizarCalendario();
+
+      const espaco = state.espacos.find(e => e.id === state.espacoSelecionadoId);
+      const u = state.unidadeLogada;
+      const isSalao = espaco.tipo === 'salao';
+      const taxa = isSalao ? state.config.taxaSalao : state.config.taxaChurrasqueira;
+      const prazo = isSalao ? state.config.prazoCancelamentoSalao : state.config.prazoCancelamentoChurrasqueira;
+
+      document.getElementById('detalhe-selecao').classList.remove('hidden');
+      document.getElementById('res-espaco').textContent = espaco.nome;
+      document.getElementById('res-capacidade').textContent = `Até ${espaco.capacidade} pessoas`;
+      document.getElementById('res-data').textContent = `${String(dia).padStart(2, '0')}/11/2026`;
+      document.getElementById('res-unidade').textContent = `${u.bloco} - Ap ${u.ap}`;
+      document.getElementById('res-valor').textContent = taxa > 0 ? `R$ ${taxa.toFixed(2)} (no boleto)` : 'Sem custo';
+      document.getElementById('res-prazo-cancelamento').textContent = `${prazo} dias`;
+      document.getElementById('chk-termo').checked = false;
+    }
+
+    function confirmarReserva() {
+      const u = state.unidadeLogada;
+      if (!u.adimplente) {
+        mostrarToast('❌ Unidade com pendência financeira. Procure a administração.');
+        return;
+      }
+      if (!document.getElementById('chk-termo').checked) {
+        mostrarToast('⚠️ Marque a caixa aceitando o regulamento e o lançamento.');
+        return;
+      }
+
+      const espaco = state.espacos.find(e => e.id === state.espacoSelecionadoId);
+      const taxa = espaco.tipo === 'salao' ? state.config.taxaSalao : state.config.taxaChurrasqueira;
+
+      state.reservas.push({
+        id: Date.now(),
+        espacoId: espaco.id,
+        unidadeId: u.id,
+        dia: state.diaSelecionado,
+        status: 'confirmada',
+        valor: taxa,
+        lancadoBoleto: taxa === 0,
+        observacaoFinanceira: taxa > 0 ? `Taxa ${espaco.nome}` : 'Isento'
+      });
+
+      state.diaSelecionado = null;
+      document.getElementById('detalhe-selecao').classList.add('hidden');
+      mostrarToast('✅ Reserva confirmada com sucesso!');
+      renderizarAreaMorador();
+    }
+
+    function renderizarMinhasReservas() {
+      const u = state.unidadeLogada;
+      const minhas = state.reservas.filter(r => r.unidadeId === u.id && r.status === 'confirmada');
+      const container = document.getElementById('lista-minhas-reservas');
+
+      if (minhas.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400">Nenhuma reserva ativa para o Ap ${u.ap}.</p>`;
+        return;
+      }
+
+      container.innerHTML = minhas.map(r => {
+        const espaco = state.espacos.find(e => e.id === r.espacoId);
+        const prazo = espaco.tipo === 'salao'
+          ? state.config.prazoCancelamentoSalao
+          : state.config.prazoCancelamentoChurrasqueira;
+        const diasFaltando = r.dia - DIA_ATUAL_SIMULADO;
+        const dentroDoPrazo = diasFaltando >= prazo;
+
+        return `
+          <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 text-xs space-y-2">
+            <div class="flex justify-between font-bold text-slate-800">
+              <span>${espaco.icone} ${espaco.nome}</span>
+              <span>${String(r.dia).padStart(2, '0')}/11/2026</span>
+            </div>
+            <div class="flex items-center justify-between text-slate-500">
+              <span>Taxa: ${r.valor > 0 ? `R$ ${r.valor.toFixed(2)}` : 'Gratuita'}</span>
+              <span class="${dentroDoPrazo ? 'text-emerald-700' : 'text-amber-700 font-semibold'}">
+                ${dentroDoPrazo ? `Cancelamento grátis (falta ${diasFaltando}d)` : `Fora do prazo (< ${prazo}d)`}
+              </span>
+            </div>
+            <button onclick="cancelarReservaMorador(${r.id})"
+              class="w-full py-1.5 rounded-lg border border-rose-200 text-rose-700 hover:bg-rose-50 font-semibold transition">
+              Cancelar Reserva
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function cancelarReservaMorador(reservaId) {
+      const r = state.reservas.find(x => x.id === reservaId);
+      const espaco = state.espacos.find(e => e.id === r.espacoId);
+      const prazo = espaco.tipo === 'salao'
+        ? state.config.prazoCancelamentoSalao
+        : state.config.prazoCancelamentoChurrasqueira;
+      const diasFaltando = r.dia - DIA_ATUAL_SIMULADO;
+      const dentroDoPrazo = diasFaltando >= prazo;
+
+      if (!dentroDoPrazo && r.valor > 0) {
+        const ok = confirm(
+          `ATENÇÃO: O prazo mínimo para cancelamento gratuito é de ${prazo} dias (faltam ${diasFaltando} dias).\n\nSe cancelar agora, a data será liberada, mas a taxa de R$ ${r.valor.toFixed(2)} será mantida no lançamento do condomínio. Deseja continuar?`
+        );
+        if (!ok) return;
+        r.status = 'cancelada_com_multa';
+        r.observacaoFinanceira = 'Multa Cancelamento Fora do Prazo';
+        mostrarToast('⚠️ Reserva cancelada fora do prazo. Cobrança mantida no condomínio.');
+      } else {
+        r.status = 'cancelada';
+        r.valor = 0;
+        r.lancadoBoleto = true;
+        r.observacaoFinanceira = 'Cancelada no prazo (Estornada)';
+        mostrarToast('✅ Reserva cancelada dentro do prazo sem cobrança.');
+      }
+
+      renderizarAreaMorador();
+    }
+
+    function mudarAbaGestao(aba) {
+      ['financeiro', 'prazos', 'unidades', 'qrcode'].forEach(nome => {
+        document.getElementById(`conteudo-${nome}`).classList.toggle('hidden', nome !== aba);
+        document.getElementById(`tab-${nome}`).className = nome === aba
+          ? 'px-4 py-2 rounded-lg text-sm font-semibold bg-emerald-600 text-white'
+          : 'px-4 py-2 rounded-lg text-sm font-semibold bg-white text-slate-600 hover:bg-slate-50 border border-slate-200';
+      });
+    }
+
+    function renderizarPainelGestao() {
+      document.getElementById('cfg-prazo-salao').value = state.config.prazoCancelamentoSalao;
+      document.getElementById('cfg-taxa-salao').value = state.config.taxaSalao;
+      document.getElementById('cfg-prazo-churras').value = state.config.prazoCancelamentoChurrasqueira;
+      document.getElementById('cfg-taxa-churras').value = state.config.taxaChurrasqueira;
+
+      let totalPendente = 0;
+      const tbodyFin = document.getElementById('tabela-lancamentos-gestao');
+      tbodyFin.innerHTML = state.reservas.map(r => {
+        const u = state.unidades.find(x => x.id === r.unidadeId);
+        const espaco = state.espacos.find(e => e.id === r.espacoId);
+        if (r.valor > 0 && !r.lancadoBoleto) totalPendente += r.valor;
+
+        const badgeStatus = r.status === 'confirmada'
+          ? '<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-semibold">Confirmada</span>'
+          : r.status === 'cancelada_com_multa'
+            ? '<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-semibold">Cancelada (Multa)</span>'
+            : '<span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs">Cancelada no Prazo</span>';
+
+        return `
+          <tr>
+            <td class="py-3 px-3 font-medium">${String(r.dia).padStart(2, '0')}/11/2026</td>
+            <td class="py-3 px-3">
+              <strong>${u.bloco} - Ap ${u.ap}</strong>
+              <span class="block text-xs text-slate-500">${u.proprietario}</span>
+            </td>
+            <td class="py-3 px-3">${espaco.nome}</td>
+            <td class="py-3 px-3">${badgeStatus}</td>
+            <td class="py-3 px-3 font-bold ${r.valor > 0 ? 'text-slate-900' : 'text-slate-400'}">
+              R$ ${r.valor.toFixed(2)}
+              <span class="block text-[10px] font-normal text-slate-500">${r.observacaoFinanceira}</span>
+            </td>
+            <td class="py-3 px-3 text-xs">
+              ${r.valor === 0 ? '—' : r.lancadoBoleto
+                ? '<span class="text-emerald-700 font-semibold">✔ Lançado no Boleto</span>'
+                : '<span class="text-amber-700 font-semibold">⏳ Aguardando Lançamento</span>'}
+            </td>
+            <td class="py-3 px-3 text-right">
+              ${r.valor > 0 && !r.lancadoBoleto
+                ? `<button onclick="marcarLancadoBoleto(${r.id})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold">Lançar no Boleto $</button>`
+                : ''}
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById('total-lancar-boleto').textContent = `R$ ${totalPendente.toFixed(2)}`;
+      renderizarTabelaUnidades();
+    }
+
+    function renderizarTabelaUnidades() {
+      const termo = (document.getElementById('busca-unidade')?.value || '').toLowerCase();
+      const filtradas = state.unidades.filter(u =>
+        u.bloco.toLowerCase().includes(termo) ||
+        u.ap.toLowerCase().includes(termo) ||
+        u.proprietario.toLowerCase().includes(termo)
+      );
+
+      document.getElementById('contador-unidades').textContent =
+        `Exibindo ${filtradas.length} de ${state.unidades.length} unidades`;
+
+      const tbodyUnid = document.getElementById('tabela-unidades-gestao');
+      tbodyUnid.innerHTML = filtradas.map(u => `
+        <tr>
+          <td class="py-2.5 px-3 font-medium">${u.bloco}</td>
+          <td class="py-2.5 px-3 font-bold">Ap ${u.ap}</td>
+          <td class="py-2.5 px-3">${u.proprietario}</td>
+          <td class="py-2.5 px-3 font-mono text-xs">${u.cpf4}****</td>
+          <td class="py-2.5 px-3">
+            <button onclick="alternarAdimplencia(${u.id})"
+              class="px-2.5 py-1 rounded-full text-xs font-semibold ${u.adimplente ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+              ${u.adimplente ? 'Adimplente (Liberado)' : 'Inadimplente (Bloqueado)'}
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function marcarLancadoBoleto(reservaId) {
+      const r = state.reservas.find(x => x.id === reservaId);
+      if (r) r.lancadoBoleto = true;
+      mostrarToast('💰 Valor marcado como lançado no boleto do condomínio!');
+      renderizarPainelGestao();
+    }
+
+    function salvarConfiguracoesPrazos() {
+      const perfil = document.getElementById('sel-perfil-gestor').value;
+      state.config.prazoCancelamentoSalao = Number(document.getElementById('cfg-prazo-salao').value);
+      state.config.taxaSalao = Number(document.getElementById('cfg-taxa-salao').value);
+      state.config.prazoCancelamentoChurrasqueira = Number(document.getElementById('cfg-prazo-churras').value);
+      state.config.taxaChurrasqueira = Number(document.getElementById('cfg-taxa-churras').value);
+
+      const agora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      document.getElementById('log-alteracao-prazo').textContent = `Atualizado às ${agora} por: ${perfil}`;
+      mostrarToast(`✅ Prazos e taxas atualizados pelo ${perfil}!`);
+    }
+
+    function adicionarUnidade() {
+      const bloco = document.getElementById('novo-bloco').value;
+      const ap = document.getElementById('novo-ap').value.trim();
+      const proprietario = document.getElementById('novo-proprietario').value.trim();
+      const cpf4 = document.getElementById('novo-cpf4').value.trim();
+
+      if (!bloco || !ap || !proprietario || cpf4.length !== 4) {
+        mostrarToast('⚠️ Preencha Bloco, Apartamento, Proprietário e 4 dígitos do CPF.');
+        return;
+      }
+
+      const existente = state.unidades.find(u => u.bloco === bloco && u.ap === ap);
+      if (existente) {
+        existente.proprietario = proprietario;
+        existente.cpf4 = cpf4;
+        mostrarToast(`🔄 Dados do ${bloco} - Ap ${ap} atualizados!`);
+      } else {
+        state.unidades.push({ id: Date.now(), bloco, ap, proprietario, cpf4, adimplente: true });
+        mostrarToast('🏢 Nova unidade cadastrada!');
+      }
+
+      document.getElementById('novo-ap').value = '';
+      document.getElementById('novo-proprietario').value = '';
+      document.getElementById('novo-cpf4').value = '';
+
+      popularSelectBlocos();
+      renderizarPainelGestao();
+    }
+
+    function alternarAdimplencia(id) {
+      const u = state.unidades.find(x => x.id === id);
+      if (u) u.adimplente = !u.adimplente;
+      renderizarTabelaUnidades();
+    }
+
+    function copiarTextoWhatsapp() {
+      const txt = document.getElementById('texto-whatsapp');
+      txt.select();
+      navigator.clipboard.writeText(txt.value);
+      mostrarToast('📋 Mensagem copiada para colar no WhatsApp!');
+    }
+
+    // Inicializa selects ao abrir
+    popularSelectBlocos();
+  </script>
+</body>
+</html>
